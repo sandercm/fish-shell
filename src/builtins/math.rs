@@ -32,7 +32,7 @@ fn parse_cmd_opts(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), Option<c_int>> {
+) -> Result<(Options, usize), c_int> {
     const cmd: &wstr = L!("math");
     let print_hints = true;
 
@@ -210,7 +210,7 @@ fn evaluate_expression(
     streams: &mut IoStreams,
     opts: &Options,
     expression: &wstr,
-) -> Option<c_int> {
+) -> c_int {
     let ret = te_interp(expression);
 
     match ret {
@@ -264,7 +264,7 @@ fn evaluate_expression(
 const MATH_CHUNK_SIZE: usize = 1024;
 
 /// The math builtin evaluates math expressions.
-pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
     let cmd = argv[0];
 
     let (opts, mut optind) = match parse_cmd_opts(argv, parser, streams) {

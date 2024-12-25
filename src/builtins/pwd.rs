@@ -12,7 +12,7 @@ const long_options: &[WOption] = &[
     wopt(L!("physical"), NoArgument, 'P'),
 ];
 
-pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
     let cmd = argv[0];
     let argc = argv.len();
     let mut resolve_symlinks = false;

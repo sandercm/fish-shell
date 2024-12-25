@@ -6,7 +6,7 @@ struct builtin_cmd_opts_t {
     list_names: bool,
 }
 
-pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;

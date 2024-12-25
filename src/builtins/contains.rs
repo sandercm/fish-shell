@@ -11,7 +11,7 @@ fn parse_options(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), Option<c_int>> {
+) -> Result<(Options, usize), c_int> {
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!("+:hi");
@@ -46,12 +46,12 @@ fn parse_options(
 
 /// Implementation of the builtin contains command, used to check if a specified string is part of
 /// a list.
-pub fn contains(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn contains(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let cmd = args[0];
 
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
+        Err(err) if err != STATUS_CMD_OK => return err,
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
 

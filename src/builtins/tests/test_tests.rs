@@ -25,19 +25,15 @@ fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> boo
     let io_chain = IoChain::new();
     let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
 
-    let result: Option<i32> = builtin_test(&parser, &mut streams, &mut argv);
+    let result: i32 = builtin_test(&parser, &mut streams, &mut argv);
 
-    if result != Some(expected) {
-        let got = match result {
-            Some(r) => r.to_wstring(),
-            None => L!("nothing").to_owned(),
-        };
+    if result != expected {
         eprintln!(
             "expected builtin_test() to return {}, got {}",
-            expected, got
+            expected, result
         );
     }
-    result == Some(expected)
+    result == expected
 }
 
 fn run_test_test(expected: i32, lst: &[&str]) -> bool {

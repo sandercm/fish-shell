@@ -139,7 +139,7 @@ fn parse_cmd_opts(
     argv: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Option<c_int> {
+) -> c_int {
     let cmd = argv[0];
     let mut w = WGetopter::new(short_options, longopts, argv);
     while let Some(opt) = w.next_opt() {
@@ -230,7 +230,7 @@ fn parse_cmd_opts(
 }
 
 /// Manipulate history of interactive commands executed by the user.
-pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let mut opts = HistoryCmdOpts::default();
     let mut optind = 0;
     let retval = parse_cmd_opts(&mut opts, &mut optind, args, parser, streams);

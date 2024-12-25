@@ -124,7 +124,7 @@ fn join(list: &[&wstr], sep: &wstr) -> WString {
 }
 
 // Print abbreviations in a fish-script friendly way.
-fn abbr_show(streams: &mut IoStreams) -> Option<c_int> {
+fn abbr_show(streams: &mut IoStreams) -> c_int {
     let style = EscapeStringStyle::Script(Default::default());
 
     abbrs::with_abbrs(|abbrs| {
@@ -178,7 +178,7 @@ fn abbr_show(streams: &mut IoStreams) -> Option<c_int> {
 }
 
 // Print the list of abbreviation names.
-fn abbr_list(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
+fn abbr_list(opts: &Options, streams: &mut IoStreams) -> c_int {
     const subcmd: &wstr = L!("--list");
     if !opts.args.is_empty() {
         streams.err.append(wgettext_fmt!(
@@ -201,7 +201,7 @@ fn abbr_list(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
 }
 
 // Rename an abbreviation, deleting any existing one with the given name.
-fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
+fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> c_int {
     const subcmd: &wstr = L!("--rename");
 
     if opts.args.len() != 2 {
@@ -232,7 +232,7 @@ fn abbr_rename(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
         ));
         return STATUS_INVALID_ARGS;
     }
-    abbrs::with_abbrs_mut(|abbrs| -> Option<c_int> {
+    abbrs::with_abbrs_mut(|abbrs| -> c_int {
         if !abbrs.has_name(old_name) {
             streams.err.append(wgettext_fmt!(
                 "%ls %ls: No abbreviation named %ls\n",
@@ -262,7 +262,7 @@ fn contains_whitespace(val: &wstr) -> bool {
 }
 
 // Test if any args is an abbreviation.
-fn abbr_query(opts: &Options) -> Option<c_int> {
+fn abbr_query(opts: &Options) -> c_int {
     // Return success if any of our args matches an abbreviation.
     abbrs::with_abbrs(|abbrs| {
         for arg in opts.args.iter() {
@@ -275,7 +275,7 @@ fn abbr_query(opts: &Options) -> Option<c_int> {
 }
 
 // Add a named abbreviation.
-fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
+fn abbr_add(opts: &Options, streams: &mut IoStreams) -> c_int {
     const subcmd: &wstr = L!("--add");
 
     if opts.args.len() < 2 && opts.function.is_none() {
@@ -412,18 +412,18 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
 }
 
 // Erase the named abbreviations.
-fn abbr_erase(opts: &Options, parser: &Parser) -> Option<c_int> {
+fn abbr_erase(opts: &Options, parser: &Parser) -> c_int {
     if opts.args.is_empty() {
         // This has historically been a silent failure.
         return STATUS_CMD_ERROR;
     }
 
     // Erase each. If any is not found, return NotFound which is historical.
-    abbrs::with_abbrs_mut(|abbrs| -> Option<c_int> {
+    abbrs::with_abbrs_mut(|abbrs| -> c_int {
         let mut result = STATUS_CMD_OK;
         for arg in &opts.args {
             if !abbrs.erase(arg) {
-                result = Some(EnvStackSetResult::NotFound.into());
+                result = EnvStackSetResult::NotFound.into();
             }
             // Erase the old uvar - this makes `abbr -e` work.
             let esc_src = escape(arg);
@@ -440,7 +440,7 @@ fn abbr_erase(opts: &Options, parser: &Parser) -> Option<c_int> {
     })
 }
 
-pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
     let mut argv_read = Vec::with_capacity(argv.len());
     argv_read.extend_from_slice(argv);
 

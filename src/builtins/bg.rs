@@ -5,12 +5,7 @@ use crate::proc::Pid;
 use super::prelude::*;
 
 /// Helper function for builtin_bg().
-fn send_to_bg(
-    parser: &Parser,
-    streams: &mut IoStreams,
-    cmd: &wstr,
-    job_pos: usize,
-) -> Option<c_int> {
+fn send_to_bg(parser: &Parser, streams: &mut IoStreams, cmd: &wstr, job_pos: usize) -> c_int {
     {
         let jobs = parser.jobs();
         if !jobs[job_pos].wants_job_control() {
@@ -46,16 +41,20 @@ fn send_to_bg(
 }
 
 /// Builtin for putting a job in the background.
-pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
         Ok(opts) => opts,
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
+        Err(err) if err != STATUS_CMD_OK => return err,
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
 
-    let cmd = args[0];
+    let cmd = match args.get(0) {
+        Some(cmd) => cmd,
+        None => return STATUS_INVALID_ARGS,
+    };
+
     if opts.print_help {
-        builtin_print_help(parser, streams, args.get(0)?);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
@@ -80,7 +79,7 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
     // The user specified at least one job to be backgrounded.
     // If one argument is not a valid pid (i.e. integer >= 0), fail without backgrounding anything,
     // but still print errors for all of them.
-    let mut retval: Option<i32> = STATUS_CMD_OK;
+    let mut retval: i32 = STATUS_CMD_OK;
     let pids: Vec<Pid> = args[opts.optind..]
         .iter()
         .filter_map(|arg| match fish_wcstoi(arg).map(Pid::new) {

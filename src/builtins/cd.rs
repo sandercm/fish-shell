@@ -13,12 +13,12 @@ use std::{os::fd::AsRawFd, sync::Arc};
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
-pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let cmd = args[0];
 
     let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
         Ok(opts) => opts,
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
+        Err(err) if err != STATUS_CMD_OK => return err,
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
 

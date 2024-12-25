@@ -92,9 +92,9 @@ fn is_completed(wh: &WaitHandleRef) -> bool {
 /// Wait for the given wait handles to be marked as completed.
 /// If `any_flag` is set, wait for the first one; otherwise wait for all.
 /// Return a status code.
-fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -> Option<c_int> {
+fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -> c_int {
     if whs.is_empty() {
-        return Some(0);
+        return STATUS_CMD_OK;
     }
 
     let mut sigint = SigChecker::new_sighupint();
@@ -115,16 +115,16 @@ fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -
                     }
                 }
             }
-            return Some(0);
+            return STATUS_CMD_OK;
         }
         if sigint.check() {
-            return Some(128 + libc::SIGINT);
+            return STATUS_SIG_INT;
         }
         proc_wait_any(parser);
     }
 }
 
-pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
     let cmd = argv[0];
     let argc = argv.len();
     let mut any_flag = false; // flag for -n option

@@ -985,7 +985,7 @@ mod test_expressions {
 /// Evaluate a conditional expression given the arguments. For POSIX conformance this
 /// supports a more limited range of functionality.
 /// Return status is the final shell status, i.e. 0 for true, 1 for false and 2 for error.
-pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
     // The first argument should be the name of the command ('test').
     if argv.is_empty() {
         return STATUS_INVALID_ARGS;

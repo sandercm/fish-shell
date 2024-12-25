@@ -292,7 +292,7 @@ pub fn exec_subshell_for_expand(
     if break_expand {
         ret
     } else {
-        STATUS_CMD_OK.unwrap()
+        STATUS_CMD_OK
     }
 }
 
@@ -311,16 +311,16 @@ fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
         ENOENT | ENOTDIR => {
             // This indicates either the command was not found, or a file redirection was not found.
             // We do not use posix_spawn file redirections so this is always command-not-found.
-            STATUS_CMD_UNKNOWN.unwrap()
+            STATUS_CMD_UNKNOWN
         }
         EACCES | ENOEXEC => {
             // The file is not executable for various reasons.
-            STATUS_NOT_EXECUTABLE.unwrap()
+            STATUS_NOT_EXECUTABLE
         }
         #[cfg(target_os = "macos")]
         libc::EBADARCH => {
             // This is for e.g. running ARM app on Intel Mac.
-            STATUS_NOT_EXECUTABLE.unwrap()
+            STATUS_NOT_EXECUTABLE
         }
         _ => {
             // Generic failure.
@@ -1479,7 +1479,7 @@ fn exec_subshell_internal(
     let Ok(bufferfill) = IoBufferfill::create_opts(parser.libdata().read_limit, STDOUT_FILENO)
     else {
         *break_expand = true;
-        return STATUS_CMD_ERROR.unwrap();
+        return STATUS_CMD_ERROR;
     };
 
     let mut io_chain = IoChain::new();
@@ -1488,7 +1488,7 @@ fn exec_subshell_internal(
     let buffer = IoBufferfill::finish(bufferfill);
     if buffer.discarded() {
         *break_expand = true;
-        return STATUS_READ_TOO_MUCH.unwrap();
+        return STATUS_READ_TOO_MUCH;
     }
 
     if eval_res.break_expand {

@@ -2309,7 +2309,7 @@ impl<'a> Reader<'a> {
             rl::CancelCommandline | rl::CancelCommandlineTraditional => {
                 if self.conf.exit_on_interrupt {
                     self.parser
-                        .set_last_statuses(Statuses::just(STATUS_CMD_ERROR.unwrap()));
+                        .set_last_statuses(Statuses::just(STATUS_CMD_ERROR));
                     self.exit_loop_requested = true;
                     return;
                 }
@@ -2591,8 +2591,7 @@ impl<'a> Reader<'a> {
             }
             rl::Exit => {
                 // This is by definition a successful exit, override the status
-                self.parser
-                    .set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
+                self.parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
                 self.exit_loop_requested = true;
                 check_exit_loop_maybe_warning(Some(self));
             }
@@ -2604,8 +2603,7 @@ impl<'a> Reader<'a> {
                     self.delete_char(false);
                 } else if c == rl::DeleteOrExit && el.is_empty() {
                     // This is by definition a successful exit, override the status
-                    self.parser
-                        .set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
+                    self.parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
                     self.exit_loop_requested = true;
                     check_exit_loop_maybe_warning(Some(self));
                 }
@@ -4851,7 +4849,7 @@ fn expand_replacer(
         Some(&mut outputs),
         /*apply_exit_status=*/ false,
     );
-    if ret != STATUS_CMD_OK.unwrap() {
+    if ret != STATUS_CMD_OK {
         return None;
     }
     let result = join_strings(&outputs, '\n');
@@ -5294,7 +5292,7 @@ impl<'a> Reader<'a> {
 
         let ret = exec_subshell(&cmd, parser, None, /*apply_exit_status=*/ false);
 
-        ret == STATUS_CMD_OK.unwrap()
+        ret == STATUS_CMD_OK
     }
 
     // Add the current command line contents to history.

@@ -88,7 +88,7 @@ fn parse_cmd_opts(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), Option<c_int>> {
+) -> Result<(Options, usize), c_int> {
     let cmd = args[0];
     let mut opts = Options::new();
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
@@ -210,7 +210,7 @@ fn read_interactive(
     right_prompt: &wstr,
     commandline: &wstr,
     inputfd: RawFd,
-) -> Option<c_int> {
+) -> c_int {
     let mut exit_res = STATUS_CMD_OK;
 
     // Construct a configuration.
@@ -271,7 +271,7 @@ const READ_CHUNK_SIZE: usize = 128;
 /// of chars.
 ///
 /// Returns an exit status.
-fn read_in_chunks(fd: RawFd, buff: &mut WString, split_null: bool, do_seek: bool) -> Option<c_int> {
+fn read_in_chunks(fd: RawFd, buff: &mut WString, split_null: bool, do_seek: bool) -> c_int {
     let mut exit_res = STATUS_CMD_OK;
     let mut narrow_buff = vec![];
     let mut eof = false;
@@ -335,7 +335,7 @@ fn read_one_char_at_a_time(
     buff: &mut WString,
     nchars: usize,
     split_null: bool,
-) -> Option<c_int> {
+) -> c_int {
     let mut exit_res = STATUS_CMD_OK;
     let mut eof = false;
     let mut nbytes = 0;
@@ -411,7 +411,7 @@ fn validate_read_args(
     argv: &[&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Option<c_int> {
+) -> c_int {
     if opts.prompt.is_some() && opts.prompt_str.is_some() {
         streams.err.append(wgettext_fmt!(
             "%ls: Options %ls and %ls cannot be used together\n",
@@ -532,7 +532,7 @@ fn validate_read_args(
 }
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
-pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
     let mut buff = WString::new();
     let mut exit_res;
 

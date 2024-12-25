@@ -523,7 +523,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
         }
     }
 
-    retval.unwrap()
+    retval
 }
 
 fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i32, usize> {
@@ -869,7 +869,7 @@ fn throwing_main() -> i32 {
     term_copy_modes();
 
     // Stomp the exit status of any initialization commands (issue #635).
-    parser.set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
+    parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
 
     // TODO: if-let-chains
     if opts.profile_startup_output.is_some() && opts.profile_startup_output != opts.profile_output {
@@ -960,7 +960,7 @@ fn throwing_main() -> i32 {
     }
 
     let exit_status = if res != 0 {
-        STATUS_CMD_UNKNOWN.unwrap()
+        STATUS_CMD_UNKNOWN
     } else {
         parser.get_last_status()
     };

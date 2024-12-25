@@ -199,7 +199,7 @@ fn parse_cmd_opts(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Option<c_int> {
+) -> c_int {
     let cmd = args[0];
 
     let mut args_read = Vec::with_capacity(args.len());
@@ -297,7 +297,7 @@ fn parse_cmd_opts(
     return STATUS_CMD_OK;
 }
 
-pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let cmd = args[0];
     let argc = args.len();
 
@@ -408,17 +408,16 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 ));
                 return STATUS_INVALID_ARGS;
             }
-            use TestFeatureRetVal::*;
-            let mut retval = Some(TEST_FEATURE_NOT_RECOGNIZED as c_int);
+            let mut retval = TestFeatureRetVal::TEST_FEATURE_NOT_RECOGNIZED;
             for md in features::METADATA {
                 if md.name == args[0] {
                     retval = match feature_test(md.flag) {
-                        true => Some(TEST_FEATURE_ON as c_int),
-                        false => Some(TEST_FEATURE_OFF as c_int),
+                        true => TestFeatureRetVal::TEST_FEATURE_ON,
+                        false => TestFeatureRetVal::TEST_FEATURE_OFF,
                     };
                 }
             }
-            return retval;
+            return retval as i32;
         }
         ref s => {
             if !args.is_empty() {

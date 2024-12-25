@@ -6,7 +6,7 @@ use crate::parser::BlockType;
 use crate::wcstringutil::join_strings;
 use libc::{STDERR_FILENO, STDOUT_FILENO};
 
-pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let argc = args.len();
     if argc <= 1 {
         return STATUS_CMD_OK;
@@ -58,7 +58,7 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Opt
         // where we have an argument but nothing is executed.
         STATUS_CMD_OK
     } else {
-        Some(res.status.status_value())
+        res.status.status_value()
     };
 
     // Finish the bufferfills - exhaust and close our pipes.

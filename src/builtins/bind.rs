@@ -448,7 +448,7 @@ fn parse_cmd_opts(
     argv: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Option<i32> {
+) -> i32 {
     let cmd = argv[0];
     let short_options = L!(":aehkKfM:Lm:s");
     const long_options: &[WOption] = &[
@@ -529,12 +529,7 @@ fn parse_cmd_opts(
 
 impl BuiltinBind {
     /// The bind builtin, used for setting character sequences.
-    pub fn bind(
-        &mut self,
-        parser: &Parser,
-        streams: &mut IoStreams,
-        argv: &mut [&wstr],
-    ) -> Option<c_int> {
+    pub fn bind(&mut self, parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
         let cmd = argv[0];
         let mut optind = 0;
         let retval = parse_cmd_opts(&mut self.opts, &mut optind, argv, parser, streams);
@@ -599,6 +594,6 @@ impl BuiltinBind {
     }
 }
 
-pub fn bind(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn bind(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     BuiltinBind::new().bind(parser, streams, args)
 }

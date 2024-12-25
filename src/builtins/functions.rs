@@ -74,7 +74,7 @@ fn parse_cmd_opts<'args>(
     argv: &mut [&'args wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Option<c_int> {
+) -> c_int {
     let cmd = L!("functions");
     let print_hints = false;
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
@@ -115,7 +115,7 @@ fn parse_cmd_opts<'args>(
     STATUS_CMD_OK
 }
 
-pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let cmd = args[0];
 
     let mut opts = FunctionsCmdOpts::default();
@@ -346,7 +346,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         return STATUS_CMD_ERROR;
     }
 
-    let mut res: c_int = STATUS_CMD_OK.unwrap();
+    let mut res: c_int = STATUS_CMD_OK;
 
     let mut first = true;
     for arg in args.iter() {
@@ -425,5 +425,5 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         first = false;
     }
 
-    return Some(res);
+    return res;
 }

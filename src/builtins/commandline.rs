@@ -182,7 +182,7 @@ fn write_part(
 }
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
-pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let rstate = commandline_get_state(true);
 
     let mut buffer_part = None;
@@ -570,14 +570,14 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     if is_valid {
         if current_buffer.is_empty() {
-            return Some(1);
+            return STATUS_CMD_ERROR;
         }
         let res = parse_util_detect_errors(current_buffer, None, /*accept_incomplete=*/ true);
         return match res {
             Ok(()) => STATUS_CMD_OK,
             Err(err) => {
                 if err.contains(ParserTestErrorBits::INCOMPLETE) {
-                    Some(2)
+                    STATUS_INVALID_ARGS
                 } else {
                     STATUS_CMD_ERROR
                 }
@@ -587,9 +587,9 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     if showing_suggestion {
         if reader_showing_suggestion(parser) {
-            return Some(0);
+            return STATUS_CMD_OK;
         }
-        return Some(1);
+        return STATUS_CMD_ERROR;
     }
 
     if search_field_mode {

@@ -43,10 +43,10 @@ fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {
 }
 
 /// Builtin for removing jobs from the job list.
-pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
         Ok(opts) => opts,
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
+        Err(err) if err != STATUS_CMD_OK => return err,
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
 

@@ -8,7 +8,7 @@ struct command_cmd_opts_t {
     find_path: bool,
 }
 
-pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;

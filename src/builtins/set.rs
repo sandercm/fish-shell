@@ -96,7 +96,7 @@ impl Options {
         args: &mut [&wstr],
         parser: &Parser,
         streams: &mut IoStreams,
-    ) -> Result<(Options, usize), Option<c_int>> {
+    ) -> Result<(Options, usize), c_int> {
         /// Values used for long-only options.
         const PATH_ARG: char = 1 as char;
         const UNPATH_ARG: char = 2 as char;
@@ -213,7 +213,7 @@ impl Options {
         optind: usize,
         parser: &Parser,
         streams: &mut IoStreams,
-    ) -> Result<(), Option<c_int>> {
+    ) -> Result<(), c_int> {
         // Can't query and erase or list.
         if opts.query && (opts.erase || opts.list) {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
@@ -530,7 +530,7 @@ fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<isize>) -> Vec<WS
 
 /// Print the names of all environment variables in the scope. It will include the values unless the
 /// `set --names` flag was used.
-fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> Option<c_int> {
+fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> c_int {
     let names_only = opts.list;
     let mut names = parser.vars().get_names(opts.scope());
     names.sort();
@@ -582,14 +582,14 @@ fn query(
     parser: &Parser,
     streams: &mut IoStreams,
     args: &[&wstr],
-) -> Option<c_int> {
+) -> c_int {
     let mut retval = 0;
     let scope = opts.scope();
 
     // No variables given, this is an error.
     // 255 is the maximum return code we allow.
     if args.is_empty() {
-        return Some(255);
+        return STATUS_NO_VARIABLES_GIVEN;
     }
 
     for arg in args {
@@ -614,7 +614,7 @@ fn query(
         }
     }
 
-    Some(retval)
+    retval
 }
 
 fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &dyn Environment) {
@@ -682,7 +682,7 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
 }
 
 /// Show mode. Show information about the named variable(s).
-fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) -> Option<c_int> {
+fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) -> c_int {
     let vars = parser.vars();
     if args.is_empty() {
         // show all vars
@@ -754,7 +754,7 @@ fn erase(
     parser: &Parser,
     streams: &mut IoStreams,
     args: &[&wstr],
-) -> Option<c_int> {
+) -> c_int {
     let mut ret = STATUS_CMD_OK;
     let scopes = opts.scope();
     // `set -e` is allowed to be called with multiple scopes.
@@ -816,14 +816,14 @@ fn erase(
     ret
 }
 
-fn env_result_to_status(retval: EnvStackSetResult) -> Option<c_int> {
-    Some(match retval {
+fn env_result_to_status(retval: EnvStackSetResult) -> c_int {
+    match retval {
         EnvStackSetResult::Ok => 0,
         EnvStackSetResult::Perm => 1,
         EnvStackSetResult::Scope => 2,
         EnvStackSetResult::Invalid => 3,
         EnvStackSetResult::NotFound => 4,
-    })
+    }
 }
 
 /// Return a list of new values for the variable `varname`, respecting the `opts`.
@@ -900,7 +900,7 @@ fn set_internal(
 
     streams: &mut IoStreams,
     argv: &[&wstr],
-) -> Option<c_int> {
+) -> c_int {
     if argv.is_empty() {
         streams
             .err
@@ -988,7 +988,7 @@ fn set_internal(
 }
 
 /// The set builtin creates, updates, and erases (removes, deletes) variables.
-pub fn set(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn set(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let cmd = args[0];
     let (opts, optind) = match Options::parse(cmd, args, parser, streams) {
         Ok(res) => res,
@@ -1012,7 +1012,7 @@ pub fn set(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Opti
     };
 
     if retval == STATUS_CMD_OK && opts.preserve_failure_exit_status {
-        return None;
+        return STATUS_PRESERVE_FAILURE;
     }
 
     return retval;

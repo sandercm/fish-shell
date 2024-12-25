@@ -9,7 +9,7 @@ use std::sync::Mutex;
 
 static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(get_rng()));
 
-pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -131,7 +131,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
             streams
                 .err
                 .append(wgettext_fmt!("%ls: too many arguments\n", cmd,));
-            return Some(1);
+            return STATUS_CMD_ERROR;
         }
     }
 

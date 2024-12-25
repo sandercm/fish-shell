@@ -27,7 +27,7 @@ fn parse_options(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), Option<c_int>> {
+) -> Result<(Options, usize), c_int> {
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!(":eghl");
@@ -73,12 +73,12 @@ fn parse_options(
 }
 
 /// The block builtin, used for temporarily blocking events.
-pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let cmd = args[0];
 
     let opts = match parse_options(args, parser, streams) {
         Ok((opts, _)) => opts,
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
+        Err(err) if err != STATUS_CMD_OK => return err,
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
 

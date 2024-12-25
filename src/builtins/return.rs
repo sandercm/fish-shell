@@ -11,7 +11,7 @@ fn parse_options(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), Option<c_int>> {
+) -> Result<(Options, usize), c_int> {
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!(":h");
@@ -44,7 +44,7 @@ fn parse_options(
 }
 
 /// Function for handling the return builtin.
-pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let mut retval = match parse_return_value(args, parser, streams) {
         Ok(v) => v,
         Err(e) => return e,
@@ -68,24 +68,24 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
         if !ld.is_interactive {
             ld.exit_current_script = true;
         }
-        return Some(retval);
+        return retval;
     }
 
     // Mark a return in the libdata.
     parser.libdata_mut().returning = true;
 
-    return Some(retval);
+    return retval;
 }
 
 pub fn parse_return_value(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<i32, Option<c_int>> {
+) -> Result<i32, c_int> {
     let cmd = args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {
         Ok((opts, optind)) => (opts, optind),
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return Err(err),
+        Err(err) if err != STATUS_CMD_OK => return Err(err),
         Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
     };
     if opts.print_help {

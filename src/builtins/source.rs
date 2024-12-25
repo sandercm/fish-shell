@@ -13,7 +13,7 @@ use super::prelude::*;
 
 /// The  source builtin, sometimes called `.`. Evaluates the contents of a file in the current
 /// context.
-pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let argc = args.len();
 
     let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
@@ -94,7 +94,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
 
     parser.pop_block(sb);
 
-    if retval != STATUS_CMD_OK.unwrap() {
+    if retval != STATUS_CMD_OK {
         let esc = escape(&func_filename);
         streams.err.append(wgettext_fmt!(
             "%ls: Error while reading file '%ls'\n",
@@ -105,5 +105,5 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         retval = parser.get_last_status();
     }
 
-    Some(retval)
+    retval
 }

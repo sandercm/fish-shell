@@ -101,7 +101,7 @@ fn set_limit(
     soft: bool,
     value: rlim_t,
     streams: &mut IoStreams,
-) -> Option<c_int> {
+) -> c_int {
     let Some((mut rlim_cur, mut rlim_max)) = getrlimit(resource) else {
         return STATUS_CMD_ERROR;
     };
@@ -168,7 +168,7 @@ impl Default for Options {
     }
 }
 
-pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!(":HSabcdefilmnqrstuvwyKPTh");
