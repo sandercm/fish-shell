@@ -4,8 +4,7 @@
 // performed have been massive.
 
 use crate::builtins::shared::{
-    builtin_run, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE,
-    STATUS_READ_TOO_MUCH,
+    builtin_run, StatusError, StatusOk, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH
 };
 use crate::common::{
     exit_without_destructors, scoped_push_replacer, str2wcstring, truncate_at_nul, wcs2string,
@@ -254,7 +253,7 @@ pub fn exec_subshell(
     parser: &Parser,
     outputs: Option<&mut Vec<WString>>,
     apply_exit_status: bool,
-) -> libc::c_int {
+) -> Result<StatusOk, StatusError> {
     let mut break_expand = false;
     exec_subshell_internal(
         cmd,
@@ -1450,7 +1449,7 @@ fn exec_subshell_internal(
     break_expand: &mut bool,
     apply_exit_status: bool,
     is_subcmd: bool,
-) -> libc::c_int {
+) -> Result<StatusOk, StatusError> {
     parser.assert_can_execute();
     let _is_subshell = scoped_push_replacer(
         |new_value| std::mem::replace(&mut parser.libdata_mut().is_subshell, new_value),
@@ -1479,7 +1478,7 @@ fn exec_subshell_internal(
     let Ok(bufferfill) = IoBufferfill::create_opts(parser.libdata().read_limit, STDOUT_FILENO)
     else {
         *break_expand = true;
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     };
 
     let mut io_chain = IoChain::new();
@@ -1488,17 +1487,23 @@ fn exec_subshell_internal(
     let buffer = IoBufferfill::finish(bufferfill);
     if buffer.discarded() {
         *break_expand = true;
-        return STATUS_READ_TOO_MUCH;
+        return Err(StatusError::STATUS_READ_TOO_MUCH);
     }
 
     if eval_res.break_expand {
         *break_expand = true;
-        return eval_res.status.status_value();
+        match eval_res.status.status_value() {
+            0 => return Ok(StatusOk::OK),
+            code => return Err(StatusError::from(code)),
+        }
     }
 
     if let Some(lst) = lst {
         populate_subshell_output(lst, &buffer, split_output);
     }
     *break_expand = false;
-    eval_res.status.status_value()
+    match eval_res.status.status_value() {
+        0 => Ok(StatusOk::OK),
+        code => Err(StatusError::from(code)),
+    }
 }
