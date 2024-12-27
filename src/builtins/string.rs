@@ -284,7 +284,7 @@ fn arguments<'iter, 'args>(
 }
 
 /// The string builtin, for manipulating strings.
-pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
+pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
     let cmd = args[0];
     let argc = args.len();
 
@@ -293,12 +293,12 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if args[1] == "-h" || args[1] == "--help" {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     let subcmd_name = args[1];
@@ -342,9 +342,9 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[0]));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
     };
 
-    result.unwrap()
+    Err(StatusError::from(result.unwrap()))
 }
