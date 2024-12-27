@@ -928,26 +928,23 @@ impl<'args> Iterator for Arguments<'args, '_> {
 
 /// A generic builtin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
-fn builtin_generic(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
+fn builtin_generic(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
     let argc = argv.len();
-    let opts = match HelpOnlyCmdOpts::parse(argv, parser, streams) {
-        Ok(opts) => opts,
-        Err(err) => return err,
-    };
+    let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
 
     if opts.print_help {
         builtin_print_help(parser, streams, argv[0]);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     // Hackish - if we have no arguments other than the command, we are a "naked invocation" and we
     // just print help.
     if argc == 1 || argv[0] == "time" {
         builtin_print_help(parser, streams, argv[0]);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
-    STATUS_CMD_ERROR
+    Err(StatusError::STATUS_CMD_ERROR)
 }
 
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
