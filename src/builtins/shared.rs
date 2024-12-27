@@ -949,14 +949,14 @@ fn builtin_generic(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr])
 
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
 /// control.
-fn builtin_break_continue(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
+fn builtin_break_continue(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
     let is_break = argv[0] == "break";
     let argc = argv.len();
 
     if argc != 1 {
         let error_message = wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]);
         builtin_print_help_error(parser, streams, argv[0], &error_message);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     // Paranoia: ensure we have a real loop.
@@ -974,7 +974,7 @@ fn builtin_break_continue(parser: &Parser, streams: &mut IoStreams, argv: &mut [
     if !has_loop {
         let error_message = wgettext_fmt!("%ls: Not inside of loop\n", argv[0]);
         builtin_print_help_error(parser, streams, argv[0], &error_message);
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     // Mark the status in the libdata.
@@ -983,7 +983,7 @@ fn builtin_break_continue(parser: &Parser, streams: &mut IoStreams, argv: &mut [
     } else {
         LoopStatus::continues
     };
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
