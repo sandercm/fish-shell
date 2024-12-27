@@ -1016,17 +1016,17 @@ fn builtin_breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wst
     parser.get_last_status()
 }
 
-fn builtin_true(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]) -> c_int {
-    STATUS_CMD_OK
+fn builtin_true(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+    Ok(StatusOk::OK)
 }
 
-fn builtin_false(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]) -> c_int {
-    STATUS_CMD_ERROR
+fn builtin_false(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+    Err(StatusError::STATUS_CMD_ERROR)
 }
 
-fn builtin_gettext(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
+fn builtin_gettext(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
     for arg in &argv[1..] {
         streams.out.append(wgettext_str(arg));
     }
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }
