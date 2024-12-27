@@ -124,7 +124,7 @@ fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -
     }
 }
 
-pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
+pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
     let cmd = argv[0];
     let argc = argv.len();
     let mut any_flag = false; // flag for -n option
@@ -148,11 +148,11 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_i
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS)
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS)
             }
             _ => {
                 panic!("unexpected retval from wgeopter.next()");
@@ -162,7 +162,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_i
 
     if print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     if w.wopt_index == argc {
@@ -205,7 +205,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_i
         }
     }
     if wait_handles.is_empty() {
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS)
     }
     return wait_for_completion(parser, &wait_handles, any_flag);
 }
