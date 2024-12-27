@@ -13,8 +13,8 @@
 //! end of the list is reached, at which point regular searching will commence.
 
 use libc::{
-    c_char, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR,
-    IXOFF, IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDIN_FILENO, STDOUT_FILENO,
+    c_char, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR, IXOFF,
+    IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDIN_FILENO, STDOUT_FILENO,
     TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
 };
 use nix::fcntl::OFlag;
@@ -717,7 +717,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<StatusOk, StatusE
                 error,
                 wgettext_fmt!("Unable to read input file: %s", err.to_string())
             );
-            return Err(StatusError::STATUS_CMD_ERROR)
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
     };
 
@@ -792,7 +792,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<StatusOk, StatusE
     // Be careful to transfer ownership, this could be a very large string.
     let ps = Arc::new(ParsedSource::new(s, ast));
     parser.eval_parsed_source(&ps, io, None, BlockType::top);
-    
+
     Ok(StatusOk::OK)
 }
 
@@ -4851,7 +4851,7 @@ fn expand_replacer(
         Some(&mut outputs),
         /*apply_exit_status=*/ false,
     );
-    if ret.is_err(){
+    if ret.is_err() {
         return None;
     }
     let result = join_strings(&outputs, '\n');

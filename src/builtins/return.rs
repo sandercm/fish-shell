@@ -44,7 +44,11 @@ fn parse_options(
 }
 
 /// Function for handling the return builtin.
-pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn r#return(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let mut retval = parse_return_value(args, parser, streams);
 
     let has_function_block = parser.blocks().iter().any(|b| b.is_function_call());
@@ -102,15 +106,13 @@ pub fn parse_return_value(
     if optind == args.len() {
         match parser.get_last_status() {
             0 => return Ok(StatusOk::OK),
-            code => return Err(StatusError::from(code))
+            code => return Err(StatusError::from(code)),
         }
     } else {
         match fish_wcstoi(args[optind]) {
-            Ok(i) => {
-                match i {
-                    0 => return Ok(StatusOk::OK),
-                    code => return Err(StatusError::from(code))
-                }
+            Ok(i) => match i {
+                0 => return Ok(StatusOk::OK),
+                code => return Err(StatusError::from(code)),
             },
             Err(_e) => {
                 streams

@@ -2,7 +2,11 @@ use super::prelude::*;
 use super::r#return::parse_return_value;
 
 /// Function for handling the exit builtin.
-pub fn exit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn exit(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     parse_return_value(args, parser, streams)?;
 
     // Mark that we are exiting in the parser.

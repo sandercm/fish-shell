@@ -507,7 +507,9 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
     // If the builtin itself produced an error, use that error.
     // Otherwise use any errors from writing to out and writing to err, in that order.
     let mut code = match builtin_ret {
-        Ok(ref ok) => match ok { _ => ok.get_code() },
+        Ok(ref ok) => match ok {
+            _ => ok.get_code(),
+        },
         Err(ref err) => err.get_code(),
     };
 
@@ -927,7 +929,11 @@ impl<'args> Iterator for Arguments<'args, '_> {
 
 /// A generic builtin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
-fn builtin_generic(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+fn builtin_generic(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let argc = argv.len();
     let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
 
@@ -948,7 +954,11 @@ fn builtin_generic(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr])
 
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
 /// control.
-fn builtin_break_continue(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+fn builtin_break_continue(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let is_break = argv[0] == "break";
     let argc = argv.len();
 
@@ -986,7 +996,11 @@ fn builtin_break_continue(parser: &Parser, streams: &mut IoStreams, argv: &mut [
 }
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
-fn builtin_breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+fn builtin_breakpoint(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = argv[0];
     if argv.len() != 1 {
         streams.err.append(wgettext_fmt!(

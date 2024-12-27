@@ -1,7 +1,11 @@
 use super::prelude::*;
 use crate::event;
 
-pub fn emit(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn emit(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = match argv.get(0) {
         Some(cmd) => *cmd,
         None => return Err(StatusError::STATUS_INVALID_ARGS),

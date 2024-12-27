@@ -529,7 +529,12 @@ fn parse_cmd_opts(
 
 impl BuiltinBind {
     /// The bind builtin, used for setting character sequences.
-    pub fn bind(&mut self, parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+    pub fn bind(
+        &mut self,
+        parser: &Parser,
+        streams: &mut IoStreams,
+        argv: &mut [&wstr],
+    ) -> Result<StatusOk, StatusError> {
         let cmd = argv[0];
         let mut optind = 0;
         parse_cmd_opts(&mut self.opts, &mut optind, argv, parser, streams)?;
@@ -591,6 +596,10 @@ impl BuiltinBind {
     }
 }
 
-pub fn bind(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn bind(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     BuiltinBind::new().bind(parser, streams, args)
 }

@@ -174,7 +174,7 @@ fn abbr_show(streams: &mut IoStreams) -> Result<StatusOk, StatusError> {
         }
     });
 
-    return Ok(StatusOk::OK)
+    return Ok(StatusOk::OK);
 }
 
 // Print the list of abbreviation names.
@@ -440,7 +440,11 @@ fn abbr_erase(opts: &Options, parser: &Parser) -> Result<StatusOk, StatusError> 
     })
 }
 
-pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn abbr(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let mut argv_read = Vec::with_capacity(argv.len());
     argv_read.extend_from_slice(argv);
 

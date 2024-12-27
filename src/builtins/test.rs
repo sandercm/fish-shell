@@ -987,7 +987,11 @@ mod test_expressions {
 /// Return status is the final shell status, i.e. 0 for true, 1 for false and 2 for error.
 /// Will return Ok(StatusOK::OK) for true, Err(StatusError::STATUS_CMD_ERROR) for false and Err(STATUS_INVALID_ARGS) for error
 /// which correspons to 0, 1 and 2 respectively.
-pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn test(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     // The first argument should be the name of the command ('test').
     if argv.is_empty() {
         return Err(StatusError::STATUS_INVALID_ARGS);

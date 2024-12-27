@@ -284,7 +284,11 @@ fn arguments<'iter, 'args>(
 }
 
 /// The string builtin, for manipulating strings.
-pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn string(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = args[0];
     let argc = args.len();
 

@@ -3,9 +3,7 @@
 //! from using a more clever memory allocation scheme, perhaps an evil combination of talloc,
 //! string buffers and reference counting.
 
-use crate::builtins::shared::{
-    get_status_code, StatusError, STATUS_EXPAND_ERROR
-};
+use crate::builtins::shared::{get_status_code, StatusError, STATUS_EXPAND_ERROR};
 use crate::common::{
     char_offset, charptr2wcstring, escape, escape_string, escape_string_for_double_quotes,
     unescape_string, valid_var_name_char, wcs2zstring, EscapeFlags, EscapeStringStyle,
@@ -965,7 +963,7 @@ pub fn expand_cmdsubst(
                 } else {
                     wgettext!("Too many active file descriptors")
                 }
-            },
+            }
             // TODO: Also overused
             // This is sent for:
             // invalid redirections or pipes (like `<&foo`),
@@ -974,7 +972,9 @@ pub fn expand_cmdsubst(
             // time in a background job.
             StatusError::STATUS_INVALID_ARGS => wgettext!("Invalid arguments"),
             StatusError::STATUS_EXPAND_ERROR => wgettext!("Expansion error"),
-            StatusError::STATUS_READ_TOO_MUCH => wgettext!("Too much data emitted by command substitution so it was discarded"),
+            StatusError::STATUS_READ_TOO_MUCH => {
+                wgettext!("Too much data emitted by command substitution so it was discarded")
+            }
             StatusError::STATUS_ILLEGAL_CMD => wgettext!("Commandname was invalid"),
             StatusError::STATUS_UNMATCHED_WILDCARD => wgettext!("Unmatched wildcard"),
             StatusError::STATUS_NOT_EXECUTABLE => wgettext!("Command not executable"),
@@ -984,9 +984,13 @@ pub fn expand_cmdsubst(
             StatusError::STATUS_UNKNOWN_CODE(_) => wgettext!("Unknown status code"),
             // these should probably never be printed?
             StatusError::STATUS_ENV_STACK_PERM => wgettext!("Environment stack is read-only"),
-            StatusError::STATUS_ENV_STACK_SCOPE => wgettext!("Environment stack is not in the correct scope"),
+            StatusError::STATUS_ENV_STACK_SCOPE => {
+                wgettext!("Environment stack is not in the correct scope")
+            }
             StatusError::STATUS_ENV_STACK_INVALID => wgettext!("Environment stack is invalid"),
-            StatusError::STATUS_ENV_STACK_NOT_FOUND => wgettext!("Environment stack property not found"),
+            StatusError::STATUS_ENV_STACK_NOT_FOUND => {
+                wgettext!("Environment stack property not found")
+            }
         };
         append_cmdsub_error_formatted!(errors, parens.start(), parens.end() - 1, err.to_owned());
         return ExpandResult::make_error(error_status.get_code());

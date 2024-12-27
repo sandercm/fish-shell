@@ -115,7 +115,11 @@ fn parse_cmd_opts<'args>(
     Ok(StatusOk::OK)
 }
 
-pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn functions(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = match args.get(0) {
         Some(cmd) => *cmd,
         None => return Err(StatusError::STATUS_INVALID_ARGS),
@@ -429,6 +433,6 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     match res {
         0 => Ok(StatusOk::OK),
-        code => Err(StatusError::from(code))
+        code => Err(StatusError::from(code)),
     }
 }

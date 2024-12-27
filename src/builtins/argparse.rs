@@ -83,7 +83,10 @@ const LONG_OPTIONS: &[WOption] = &[
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
-fn check_for_mutually_exclusive_flags(opts: &ArgParseCmdOpts, streams: &mut IoStreams) -> Result<StatusOk, StatusError> {
+fn check_for_mutually_exclusive_flags(
+    opts: &ArgParseCmdOpts,
+    streams: &mut IoStreams,
+) -> Result<StatusOk, StatusError> {
     for opt_spec in opts.options.values() {
         if opt_spec.num_seen == 0 {
             continue;
@@ -152,7 +155,10 @@ fn check_for_mutually_exclusive_flags(opts: &ArgParseCmdOpts, streams: &mut IoSt
 
 // This should be called after all the option specs have been parsed. At that point we have enough
 // information to parse the values associated with any `--exclusive` flags.
-fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> Result<StatusOk, StatusError> {
+fn parse_exclusive_args(
+    opts: &mut ArgParseCmdOpts,
+    streams: &mut IoStreams,
+) -> Result<StatusOk, StatusError> {
     for raw_xflags in &opts.raw_exclusive_flags {
         let xflags: Vec<_> = raw_xflags.split(',').collect();
         if xflags.len() < 2 {
@@ -844,7 +850,10 @@ fn argparse_parse_args<'args>(
     Ok(StatusOk::OK)
 }
 
-fn check_min_max_args_constraints(opts: &ArgParseCmdOpts, streams: &mut IoStreams) -> Result<StatusOk, StatusError> {
+fn check_min_max_args_constraints(
+    opts: &ArgParseCmdOpts,
+    streams: &mut IoStreams,
+) -> Result<StatusOk, StatusError> {
     let cmd = &opts.name;
 
     if opts.args.len() < opts.min_args {
@@ -906,7 +915,11 @@ fn set_argparse_result_vars(vars: &EnvStack, opts: &ArgParseCmdOpts) {
 /// an external command also means its output has to be in a form that can be eval'd. Because our
 /// version is a builtin it can directly set variables local to the current scope (e.g., a
 /// function). It doesn't need to write anything to stdout that then needs to be eval'd.
-pub fn argparse(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn argparse(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = match args.get(0) {
         Some(cmd) => *cmd,
         None => return Err(StatusError::STATUS_INVALID_ARGS),

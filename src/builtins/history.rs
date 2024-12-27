@@ -142,7 +142,7 @@ fn parse_cmd_opts(
 ) -> Result<StatusOk, StatusError> {
     let cmd = match argv.get(0) {
         Some(cmd) => *cmd,
-        None => return Err(StatusError::STATUS_INVALID_ARGS)
+        None => return Err(StatusError::STATUS_INVALID_ARGS),
     };
 
     let mut w = WGetopter::new(short_options, longopts, argv);
@@ -234,10 +234,14 @@ fn parse_cmd_opts(
 }
 
 /// Manipulate history of interactive commands executed by the user.
-pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn history(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let mut opts = HistoryCmdOpts::default();
     let mut optind = 0;
-    
+
     parse_cmd_opts(&mut opts, &mut optind, args, parser, streams)?;
 
     let cmd = match args.get(0) {

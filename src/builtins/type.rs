@@ -17,7 +17,11 @@ struct type_cmd_opts_t {
     query: bool,
 }
 
-pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn r#type(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;

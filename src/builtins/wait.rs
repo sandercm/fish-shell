@@ -92,7 +92,11 @@ fn is_completed(wh: &WaitHandleRef) -> bool {
 /// Wait for the given wait handles to be marked as completed.
 /// If `any_flag` is set, wait for the first one; otherwise wait for all.
 /// Return a status code.
-fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -> Result<StatusOk, StatusError> {
+fn wait_for_completion(
+    parser: &Parser,
+    whs: &[WaitHandleRef],
+    any_flag: bool,
+) -> Result<StatusOk, StatusError> {
     if whs.is_empty() {
         return Ok(StatusOk::OK);
     }
@@ -124,7 +128,11 @@ fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -
     }
 }
 
-pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn wait(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = argv[0];
     let argc = argv.len();
     let mut any_flag = false; // flag for -n option
@@ -148,11 +156,11 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Res
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return Err(StatusError::STATUS_INVALID_ARGS)
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return Err(StatusError::STATUS_INVALID_ARGS)
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             _ => {
                 panic!("unexpected retval from wgeopter.next()");
@@ -205,7 +213,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Res
         }
     }
     if wait_handles.is_empty() {
-        return Err(StatusError::STATUS_INVALID_ARGS)
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
     return wait_for_completion(parser, &wait_handles, any_flag);
 }

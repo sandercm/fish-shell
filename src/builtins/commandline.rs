@@ -182,7 +182,11 @@ fn write_part(
 }
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
-pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn commandline(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let rstate = commandline_get_state(true);
 
     let mut buffer_part = None;

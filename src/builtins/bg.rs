@@ -5,7 +5,12 @@ use crate::proc::Pid;
 use super::prelude::*;
 
 /// Helper function for builtin_bg().
-fn send_to_bg(parser: &Parser, streams: &mut IoStreams, cmd: &wstr, job_pos: usize) -> Result<StatusOk, StatusError> {
+fn send_to_bg(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    job_pos: usize,
+) -> Result<StatusOk, StatusError> {
     {
         let jobs = parser.jobs();
         if !jobs[job_pos].wants_job_control() {
@@ -41,7 +46,11 @@ fn send_to_bg(parser: &Parser, streams: &mut IoStreams, cmd: &wstr, job_pos: usi
 }
 
 /// Builtin for putting a job in the background.
-pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn bg(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;
 
     let cmd = match args.get(0) {

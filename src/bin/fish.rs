@@ -28,7 +28,8 @@ use fish::future::IsSomeAnd;
 use fish::{
     ast::Ast,
     builtins::shared::{
-        get_status_code, BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN
+        get_status_code, BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK,
+        STATUS_CMD_UNKNOWN,
     },
     common::{
         escape, get_executable_path, save_term_foreground_process_group, scoped_push_replacer,
@@ -919,7 +920,7 @@ fn throwing_main() -> i32 {
         }
         res = match reader_read(parser, libc::STDIN_FILENO, &IoChain::new()) {
             Ok(ok) => ok.get_code(),
-            Err(err) => err.get_code()
+            Err(err) => err.get_code(),
         };
     } else {
         let n = wcs2string(&args[my_optind]);
@@ -952,7 +953,7 @@ fn throwing_main() -> i32 {
                 );
                 res = match reader_read(parser, f.as_raw_fd(), &IoChain::new()) {
                     Ok(ok) => ok.get_code(),
-                    Err(err) => err.get_code()
+                    Err(err) => err.get_code(),
                 };
                 if res != 0 {
                     FLOGF!(

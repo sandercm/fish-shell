@@ -297,7 +297,11 @@ fn parse_cmd_opts(
     return Ok(StatusOk::OK);
 }
 
-pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn status(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = args[0];
     let argc = args.len();
 

@@ -1,7 +1,7 @@
 // Functions for executing the jobs builtin.
 
 use super::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, StatusError, StatusOk
+    builtin_missing_argument, builtin_print_help, builtin_unknown_option, StatusError, StatusOk,
 };
 use crate::common::{escape_string, timef, EscapeFlags, EscapeStringStyle};
 use crate::io::IoStreams;
@@ -131,7 +131,11 @@ const LONG_OPTIONS: &[WOption] = &[
 ];
 
 /// The jobs builtin. Used for printing running jobs. Defined in builtin_jobs.c.
-pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn jobs(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = match argv.get(0) {
         Some(cmd) => *cmd,
         None => return Err(StatusError::STATUS_INVALID_ARGS),

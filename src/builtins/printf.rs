@@ -767,7 +767,11 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
 }
 
 /// The printf builtin.
-pub fn printf(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn printf(
+    _parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let mut argc = argv.len();
 
     // Rebind argv as immutable slice (can't rearrange its elements), skipping the command name.

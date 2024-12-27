@@ -13,13 +13,17 @@ use super::prelude::*;
 
 /// The  source builtin, sometimes called `.`. Evaluates the contents of a file in the current
 /// context.
-pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+pub fn source(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let argc = args.len();
 
     let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;
     let cmd = match args.get(0) {
         Some(&cmd) => cmd,
-        None => return Err(StatusError::STATUS_INVALID_ARGS)
+        None => return Err(StatusError::STATUS_INVALID_ARGS),
     };
 
     if opts.print_help {
@@ -95,11 +99,9 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> R
     parser.pop_block(sb);
 
     match retval {
-        Ok(_) => {
-            match parser.get_last_status() {
-                0 => Ok(StatusOk::OK),
-                code => Err(StatusError::from(code)),
-            }
+        Ok(_) => match parser.get_last_status() {
+            0 => Ok(StatusOk::OK),
+            code => Err(StatusError::from(code)),
         },
         Err(err) => {
             let esc = escape(&func_filename);

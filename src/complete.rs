@@ -880,7 +880,8 @@ impl<'ctx> Completer<'ctx> {
             // Compute new value and reinsert it.
             let test_res = exec_subshell(
                 condition, parser, None, false, /* don't apply exit status */
-            ).is_ok();
+            )
+            .is_ok();
             self.condition_cache.insert(condition.to_owned(), test_res);
             test_res
         }
