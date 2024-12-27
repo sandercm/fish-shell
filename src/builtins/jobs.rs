@@ -1,7 +1,7 @@
 // Functions for executing the jobs builtin.
 
 use super::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, StatusError, StatusOk, STATUS_CMD_ERROR, STATUS_INVALID_ARGS
+    builtin_missing_argument, builtin_print_help, builtin_unknown_option, StatusError, StatusOk
 };
 use crate::common::{escape_string, timef, EscapeFlags, EscapeStringStyle};
 use crate::io::IoStreams;
@@ -12,11 +12,9 @@ use crate::wchar_ext::WExt;
 use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 use crate::wutil::wgettext;
 use crate::{
-    builtins::shared::STATUS_CMD_OK,
     wchar::{wstr, WString, L},
     wutil::{fish_wcstoi, sprintf, wgettext_fmt},
 };
-use libc::c_int;
 use std::num::NonZeroU32;
 
 /// Print modes for the jobs builtin.

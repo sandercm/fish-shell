@@ -4,7 +4,7 @@
 //! string buffers and reference counting.
 
 use crate::builtins::shared::{
-    get_status_code, StatusError, STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH, STATUS_UNMATCHED_WILDCARD
+    get_status_code, StatusError, STATUS_EXPAND_ERROR
 };
 use crate::common::{
     char_offset, charptr2wcstring, escape, escape_string, escape_string_for_double_quotes,

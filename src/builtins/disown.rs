@@ -1,15 +1,14 @@
 // Implementation of the disown builtin.
 
-use super::shared::{builtin_print_help, StatusError, StatusOk, STATUS_CMD_ERROR, STATUS_INVALID_ARGS};
+use super::shared::{builtin_print_help, StatusError, StatusOk};
 use crate::io::IoStreams;
 use crate::parser::Parser;
 use crate::proc::{add_disowned_job, Job, Pid};
 use crate::{
-    builtins::shared::{HelpOnlyCmdOpts, STATUS_CMD_OK},
+    builtins::shared::HelpOnlyCmdOpts,
     wchar::wstr,
     wutil::{fish_wcstoi, wgettext_fmt},
 };
-use libc::c_int;
 use libc::SIGCONT;
 
 /// Helper for builtin_disown.
