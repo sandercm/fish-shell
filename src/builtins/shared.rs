@@ -987,7 +987,7 @@ fn builtin_break_continue(parser: &Parser, streams: &mut IoStreams, argv: &mut [
 }
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
-fn builtin_breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
+fn builtin_breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
     let cmd = argv[0];
     if argv.len() != 1 {
         streams.err.append(wgettext_fmt!(
@@ -996,12 +996,12 @@ fn builtin_breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wst
             0,
             argv.len() - 1
         ));
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     // If we're not interactive then we can't enter the debugger. So treat this command as a no-op.
     if !parser.is_interactive() {
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     // Ensure we don't allow creating a breakpoint at an interactive prompt. There may be a simpler
@@ -1015,7 +1015,7 @@ fn builtin_breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wst
                 "%ls: Command not valid at an interactive prompt\n",
                 cmd,
             ));
-            return STATUS_ILLEGAL_CMD;
+            return Err(StatusError::STATUS_ILLEGAL_CMD);
         }
     }
 
@@ -1023,7 +1023,10 @@ fn builtin_breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wst
     let io_chain = &streams.io_chain;
     reader_read(parser, STDIN_FILENO, io_chain);
     parser.pop_block(bpb);
-    parser.get_last_status()
+    match parser.get_last_status() {
+        0 => Ok(StatusOk::OK),
+        code => Err(StatusError::from(code)),
+    }
 }
 
 fn builtin_true(
