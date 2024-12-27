@@ -106,6 +106,12 @@ pub enum StatusError {
     STATUS_NO_VARIABLES_GIVEN,
     // used when the return code is not reserved
     STATUS_UNKNOWN_CODE(c_int),
+    // used when converting from EnvStackSetResult
+    // seperate enum value so it's less confusing when a conversion has to happen
+    STATUS_ENV_STACK_PERM,      // 1     // The variable is read-only.
+    STATUS_ENV_STACK_SCOPE,     // 2    // Variable cannot be set in the given scope.
+    STATUS_ENV_STACK_INVALID,   // 3  // The variable's value is invalid (e.g. umask).
+    STATUS_ENV_STACK_NOT_FOUND, // 4 // The variable was not found (only possible when removing a variable)
 }
 
 impl StatusError {
@@ -140,6 +146,10 @@ impl get_status_code for StatusError {
             StatusError::STATUS_SIG_INT => 130,
             StatusError::STATUS_NO_VARIABLES_GIVEN => 255,
             StatusError::STATUS_UNKNOWN_CODE(code) => *code,
+            StatusError::STATUS_ENV_STACK_PERM => 1, // The variable is read-only.
+            StatusError::STATUS_ENV_STACK_SCOPE => 2, // Variable cannot be set in the given scope.
+            StatusError::STATUS_ENV_STACK_INVALID => 3, // The variable's value is invalid (e.g. umask).
+            StatusError::STATUS_ENV_STACK_NOT_FOUND => 4, // The variable was not found (only possible when removing a variable
         }
     }
 }
@@ -153,6 +163,9 @@ pub const STATUS_CMD_ERROR: c_int = 1;
 /// arguments that might result in a command failure. An invalid args condition is something
 /// like an unrecognized flag, missing or too many arguments, an invalid integer, etc.
 pub const STATUS_INVALID_ARGS: c_int = 2;
+// The variable was not found (only possible when removing a variable).
+// Used by EnvStackSetResult
+pub const STATUS_NOT_FOUND: c_int = 4;
 
 /// The status code used when a command was not found.
 pub const STATUS_CMD_UNKNOWN: c_int = 127;
@@ -1016,15 +1029,27 @@ fn builtin_breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wst
     parser.get_last_status()
 }
 
-fn builtin_true(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+fn builtin_true(
+    _parser: &Parser,
+    _streams: &mut IoStreams,
+    _argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     Ok(StatusOk::OK)
 }
 
-fn builtin_false(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+fn builtin_false(
+    _parser: &Parser,
+    _streams: &mut IoStreams,
+    _argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     Err(StatusError::STATUS_CMD_ERROR)
 }
 
-fn builtin_gettext(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+fn builtin_gettext(
+    _parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     for arg in &argv[1..] {
         streams.out.append(wgettext_str(arg));
     }
