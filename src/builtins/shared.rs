@@ -506,12 +506,9 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
     // Resolve our status code.
     // If the builtin itself produced an error, use that error.
     // Otherwise use any errors from writing to out and writing to err, in that order.
-    let mut code = {
-        if builtin_ret == STATUS_PRESERVE_FAILURE {
-            STATUS_CMD_OK
-        } else {
-            builtin_ret
-        }
+    let mut code = match builtin_ret {
+        Ok(ref ok) => match ok { _ => ok.get_code() },
+        Err(ref err) => err.get_code(),
     };
 
     if code == 0 {
@@ -527,10 +524,12 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
         code = 255;
     }
 
-    // Handle the case of an empty status.
-    if code == 0 && builtin_ret == STATUS_PRESERVE_FAILURE {
-        return ProcStatus::empty();
+    // Handle the case of an STATUS_PRESERVE_FAILURE.
+    match (code, builtin_ret) {
+        (0, Ok(StatusOk::OK_PRESERVE_FAILURE)) => return ProcStatus::empty(),
+        _ => (),
     }
+
     if code < 0 {
         // If the code is below 0, constructing a proc_status_t
         // would assert() out, which is a terrible failure mode
