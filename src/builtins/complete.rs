@@ -216,7 +216,7 @@ const OPT_ESCAPE: char = '\x01';
 
 /// The complete builtin. Used for specifying programmable tab-completions. Calls the functions in
 /// complete.cpp for any heavy lifting.
-pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
+pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
     let cmd = argv[0];
     let argc = argv.len();
     let mut result_mode = CompletionMode::default();
@@ -301,7 +301,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                         cmd,
                         w.woptarg.unwrap()
                     ));
-                    return STATUS_INVALID_ARGS;
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
             }
             'd' => {
@@ -320,7 +320,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     streams
                         .err
                         .append(wgettext_fmt!("%ls: -s requires a non-empty string\n", cmd,));
-                    return STATUS_INVALID_ARGS;
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
             }
             'l' => {
@@ -330,7 +330,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     streams
                         .err
                         .append(wgettext_fmt!("%ls: -l requires a non-empty string\n", cmd,));
-                    return STATUS_INVALID_ARGS;
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
             }
             'o' => {
@@ -340,7 +340,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     streams
                         .err
                         .append(wgettext_fmt!("%ls: -o requires a non-empty string\n", cmd,));
-                    return STATUS_INVALID_ARGS;
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
             }
             'S' => {
@@ -350,7 +350,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     streams
                         .err
                         .append(wgettext_fmt!("%ls: -S requires a non-empty string\n", cmd,));
-                    return STATUS_INVALID_ARGS;
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
             }
             'a' => {
@@ -374,15 +374,15 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             }
             'h' => {
                 builtin_print_help(parser, streams, cmd);
-                return STATUS_CMD_OK;
+                return Ok(StatusOk::OK);
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             _ => panic!("unexpected retval from WGetopter"),
         }
@@ -404,7 +404,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 "'--exclusive' and '--force-files'"
             ));
         }
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if w.wopt_index != argc {
@@ -420,7 +420,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
     }
 
@@ -437,7 +437,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 ));
                 streams.err.push('\n');
             }
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
     }
 
@@ -454,7 +454,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             ));
             streams.err.append(err_text);
             streams.err.push('\n');
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
     }
 
@@ -468,7 +468,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     // This corresponds to using 'complete -C' in non-interactive mode.
                     // See #2361    .
                     builtin_missing_argument(parser, streams, cmd, L!("-C"), true);
-                    return STATUS_INVALID_ARGS;
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
                 commandline_state.text
             }
@@ -614,5 +614,5 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         }
     }
 
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }
