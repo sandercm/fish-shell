@@ -11,7 +11,7 @@ fn parse_options(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), c_int> {
+) -> Result<(Options, usize), StatusError> {
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!(":h");
@@ -26,7 +26,7 @@ fn parse_options(
             'h' => opts.print_help = true,
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
-                return Err(STATUS_INVALID_ARGS);
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             '?' => {
                 // We would normally invoke builtin_unknown_option() and return an error.
@@ -81,35 +81,44 @@ pub fn parse_return_value(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<i32, c_int> {
-    let cmd = args[0];
-    let (opts, optind) = match parse_options(args, parser, streams) {
-        Ok((opts, optind)) => (opts, optind),
-        Err(err) if err != STATUS_CMD_OK => return Err(err),
-        Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
+) -> Result<StatusOk, StatusError> {
+    let cmd = match args.get(0) {
+        Some(cmd) => *cmd,
+        None => return Err(StatusError::STATUS_INVALID_ARGS),
     };
+
+    let (opts, optind) = parse_options(args, parser, streams)?;
+
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return Err(STATUS_CMD_OK);
+        return Ok(StatusOk::OK);
     }
     if optind + 1 < args.len() {
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return Err(STATUS_INVALID_ARGS);
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
     if optind == args.len() {
-        Ok(parser.get_last_status())
+        match parser.get_last_status() {
+            0 => return Ok(StatusOk::OK),
+            code => return Err(StatusError::from(code))
+        }
     } else {
         match fish_wcstoi(args[optind]) {
-            Ok(i) => Ok(i),
+            Ok(i) => {
+                match i {
+                    0 => return Ok(StatusOk::OK),
+                    code => return Err(StatusError::from(code))
+                }
+            },
             Err(_e) => {
                 streams
                     .err
                     .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return Err(STATUS_INVALID_ARGS);
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
         }
     }
