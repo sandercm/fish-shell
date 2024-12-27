@@ -6,10 +6,10 @@ use crate::parser::BlockType;
 use crate::wcstringutil::join_strings;
 use libc::{STDERR_FILENO, STDOUT_FILENO};
 
-pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
+pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
     let argc = args.len();
     if argc <= 1 {
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     let new_cmd = join_strings(&args[1..], ' ');
@@ -28,7 +28,7 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_i
         match IoBufferfill::create_opts(parser.libdata().read_limit, STDOUT_FILENO) {
             Err(_) => {
                 // We were unable to create a pipe, probably fd exhaustion.
-                return STATUS_CMD_ERROR;
+                return Err(StatusError::STATUS_CMD_ERROR);
             }
             Ok(buffer) => {
                 stdout_fill = Some(buffer.clone());
@@ -43,7 +43,7 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_i
         match IoBufferfill::create_opts(parser.libdata().read_limit, STDERR_FILENO) {
             Err(_) => {
                 // We were unable to create a pipe, probably fd exhaustion.
-                return STATUS_CMD_ERROR;
+                return Err(StatusError::STATUS_CMD_ERROR);
             }
             Ok(buffer) => {
                 stderr_fill = Some(buffer.clone());
@@ -56,9 +56,12 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_i
     let status = if res.was_empty {
         // Issue #5692, in particular, to catch `eval ""`, `eval "begin; end;"`, etc.
         // where we have an argument but nothing is executed.
-        STATUS_CMD_OK
+        Ok(StatusOk::OK)
     } else {
-        res.status.status_value()
+        match res.status.status_value() {
+            0 => Ok(StatusOk::OK),
+            code => Err(StatusError::from(code))
+        }
     };
 
     // Finish the bufferfills - exhaust and close our pipes.
