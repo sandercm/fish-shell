@@ -13,18 +13,17 @@ use std::{os::fd::AsRawFd, sync::Arc};
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
-pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
-    let cmd = args[0];
-
-    let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
-        Ok(opts) => opts,
-        Err(err) if err != STATUS_CMD_OK => return err,
-        Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
+pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+    let cmd = match args.get(0) {
+        Some(cmd) => *cmd,
+        None => return Err(StatusError::STATUS_INVALID_ARGS),
     };
+
+    let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     let vars = parser.vars();
@@ -42,7 +41,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int
                 streams
                     .err
                     .append(wgettext_fmt!("%ls: Could not find home directory\n", cmd));
-                return STATUS_CMD_ERROR;
+                return Err(StatusError::STATUS_CMD_ERROR);
             }
         }
     };
@@ -57,7 +56,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int
         if !parser.is_interactive() {
             streams.err.append(parser.current_line());
         };
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     let pwd = vars.get_pwd_slash();
@@ -74,7 +73,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int
             streams.err.append(parser.current_line());
         }
 
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     let mut best_errno = 0;
@@ -130,7 +129,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int
         parser.libdata_mut().cwd_fd = Some(dir_fd);
 
         parser.set_var_and_fire(L!("PWD"), EnvMode::EXPORT | EnvMode::GLOBAL, vec![norm_dir]);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     if best_errno == ENOTDIR {
@@ -178,5 +177,5 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int
         streams.err.append(parser.current_line());
     }
 
-    return STATUS_CMD_ERROR;
+    return Err(StatusError::STATUS_CMD_ERROR);
 }
