@@ -80,8 +80,17 @@ pub const FG_MSG: &str = "Send job %d (%ls) to foreground\n";
 pub trait get_status_code {
     fn get_code(&self) -> c_int;
 }
+
+pub fn get_code(result: &Result<StatusOk, StatusError>) -> i32 {
+    match result {
+        Ok(ok) => ok.get_code(),
+        Err(err) => err.get_code(),
+    }
+}
+
 /// Functions that return a status code should have return type
 /// `Result<StatusOk, StatusError>`.
+#[derive(Debug)]
 pub enum StatusOk {
     OK,
     OK_PRESERVE_FAILURE,
@@ -92,7 +101,7 @@ impl get_status_code for StatusOk {
         0
     }
 }
-
+#[derive(Debug)]
 pub enum StatusError {
     STATUS_CMD_ERROR,
     STATUS_INVALID_ARGS,

@@ -1,3 +1,4 @@
+use crate::builtins::shared::get_code;
 use crate::io::IoChain;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -40,7 +41,7 @@ fn test_string() {
 
         // Check return code after so we get a chance to identify the difference first
         assert_eq!(
-            expected_rc, rc,
+            expected_rc, get_code(&rc),
             "string builtin returned unexpected return code"
         );
     }
