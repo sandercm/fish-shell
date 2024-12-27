@@ -88,7 +88,7 @@ fn parse_cmd_opts(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), c_int> {
+) -> Result<(Options, usize), StatusError> {
     let cmd = args[0];
     let mut opts = Options::new();
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
@@ -111,7 +111,7 @@ fn parse_cmd_opts(
                     ),
                     cmd
                 ));
-                return Err(STATUS_INVALID_ARGS);
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             'f' => {
                 opts.place |= EnvMode::FUNCTION;
@@ -138,7 +138,7 @@ fn parse_cmd_opts(
                             w.woptarg.unwrap()
                         ));
                         builtin_print_error_trailer(parser, streams.err, cmd);
-                        return Err(STATUS_INVALID_ARGS);
+                        return Err(StatusError::STATUS_INVALID_ARGS);
                     }
                     _ => {
                         streams.err.append(wgettext_fmt!(
@@ -147,7 +147,7 @@ fn parse_cmd_opts(
                             w.woptarg.unwrap()
                         ));
                         builtin_print_error_trailer(parser, streams.err, cmd);
-                        return Err(STATUS_INVALID_ARGS);
+                        return Err(StatusError::STATUS_INVALID_ARGS);
                     }
                 }
             }
@@ -183,11 +183,11 @@ fn parse_cmd_opts(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
-                return Err(STATUS_INVALID_ARGS);
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], true);
-                return Err(STATUS_INVALID_ARGS);
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             _ => {
                 panic!("unexpected retval from WGetopter");
@@ -210,8 +210,8 @@ fn read_interactive(
     right_prompt: &wstr,
     commandline: &wstr,
     inputfd: RawFd,
-) -> c_int {
-    let mut exit_res = STATUS_CMD_OK;
+) -> Result<StatusOk, StatusError> {
+    let mut exit_res = Ok(StatusOk::OK);
 
     // Construct a configuration.
     let mut conf = ReaderConfig::default();
@@ -255,7 +255,7 @@ fn read_interactive(
             buff.truncate(nchars);
         }
     } else {
-        exit_res = STATUS_CMD_ERROR;
+        exit_res = Err(StatusError::STATUS_CMD_ERROR);
     }
     reader_pop();
     exit_res
@@ -271,8 +271,8 @@ const READ_CHUNK_SIZE: usize = 128;
 /// of chars.
 ///
 /// Returns an exit status.
-fn read_in_chunks(fd: RawFd, buff: &mut WString, split_null: bool, do_seek: bool) -> c_int {
-    let mut exit_res = STATUS_CMD_OK;
+fn read_in_chunks(fd: RawFd, buff: &mut WString, split_null: bool, do_seek: bool) -> Result<StatusOk, StatusError> {
+    let mut exit_res = Ok(StatusOk::OK);
     let mut narrow_buff = vec![];
     let mut eof = false;
     let mut finished = false;
@@ -310,18 +310,18 @@ fn read_in_chunks(fd: RawFd, buff: &mut WString, split_null: bool, do_seek: bool
                 } == -1
             {
                 perror("lseek");
-                return STATUS_CMD_ERROR;
+                return Err(StatusError::STATUS_CMD_ERROR);
             }
             finished = true;
         } else if narrow_buff.len() > READ_BYTE_LIMIT.load(Ordering::Relaxed) {
-            exit_res = STATUS_READ_TOO_MUCH;
+            exit_res = Err(StatusError::STATUS_READ_TOO_MUCH);
             finished = true;
         }
     }
 
     *buff = str2wcstring(&narrow_buff);
     if buff.is_empty() && eof {
-        exit_res = STATUS_CMD_ERROR;
+        exit_res = Err(StatusError::STATUS_CMD_ERROR);
     }
 
     exit_res
@@ -335,8 +335,8 @@ fn read_one_char_at_a_time(
     buff: &mut WString,
     nchars: usize,
     split_null: bool,
-) -> c_int {
-    let mut exit_res = STATUS_CMD_OK;
+) -> Result<StatusOk, StatusError> {
+    let mut exit_res = Ok(StatusOk::OK);
     let mut eof = false;
     let mut nbytes = 0;
 
@@ -378,7 +378,7 @@ fn read_one_char_at_a_time(
         }
 
         if nbytes > READ_BYTE_LIMIT.load(Ordering::Relaxed) {
-            exit_res = STATUS_READ_TOO_MUCH;
+            exit_res = Err(StatusError::STATUS_READ_TOO_MUCH);
             break;
         }
         if eof {
@@ -398,7 +398,7 @@ fn read_one_char_at_a_time(
     }
 
     if buff.is_empty() && eof {
-        exit_res = STATUS_CMD_ERROR;
+        exit_res = Err(StatusError::STATUS_CMD_ERROR);
     }
 
     exit_res
@@ -411,7 +411,7 @@ fn validate_read_args(
     argv: &[&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> c_int {
+) -> Result<StatusOk, StatusError> {
     if opts.prompt.is_some() && opts.prompt_str.is_some() {
         streams.err.append(wgettext_fmt!(
             "%ls: Options %ls and %ls cannot be used together\n",
@@ -420,7 +420,7 @@ fn validate_read_args(
             "-P",
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if opts.delimiter.is_some() && opts.one_line {
@@ -430,7 +430,7 @@ fn validate_read_args(
             "--delimiter",
             "--line"
         ));
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
     if opts.one_line && opts.split_null {
         streams.err.append(wgettext_fmt!(
@@ -439,7 +439,7 @@ fn validate_read_args(
             "-z",
             "--line"
         ));
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if let Some(prompt_str) = opts.prompt_str.as_ref() {
@@ -451,7 +451,7 @@ fn validate_read_args(
     if opts.place.contains(EnvMode::UNEXPORT) && opts.place.contains(EnvMode::EXPORT) {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if opts
@@ -463,7 +463,7 @@ fn validate_read_args(
     {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     let argc = argv.len();
@@ -471,21 +471,21 @@ fn validate_read_args(
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc));
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if opts.array && argc != 1 {
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc));
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if opts.to_stdout && argc > 0 {
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc));
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if opts.tokenize && opts.delimiter.is_some() {
@@ -495,7 +495,7 @@ fn validate_read_args(
             "--delimiter",
             "--tokenize"
         ));
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if opts.tokenize && opts.one_line {
@@ -505,7 +505,7 @@ fn validate_read_args(
             "--line",
             "--tokenize"
         ));
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     // Verify all variable names.
@@ -515,7 +515,7 @@ fn validate_read_args(
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, arg));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
         if EnvVar::flags_for(arg).contains(EnvVarFlags::READ_ONLY) {
             streams.err.append(wgettext_fmt!(
@@ -524,22 +524,20 @@ fn validate_read_args(
                 arg
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
     }
 
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
-pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_int {
+pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Result<StatusOk, StatusError> {
     let mut buff = WString::new();
-    let mut exit_res;
+    let mut exit_res: Result<StatusOk, StatusError>;
 
-    let (mut opts, optind) = match parse_cmd_opts(argv, parser, streams) {
-        Ok(res) => res,
-        Err(retval) => return retval,
-    };
+    let (mut opts, optind) = parse_cmd_opts(argv, parser, streams)?;
+
     let cmd = argv[0];
     let mut argv: &[&wstr] = argv;
     if !opts.to_stdout {
@@ -553,20 +551,17 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_i
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
-    let retval = validate_read_args(cmd, &mut opts, argv, parser, streams);
-    if retval != STATUS_CMD_OK {
-        return retval;
-    }
+    validate_read_args(cmd, &mut opts, argv, parser, streams)?;
 
     // stdin may have been explicitly closed
     if streams.stdin_fd < 0 {
         streams
             .err
             .append(wgettext_fmt!("%ls: stdin is closed\n", cmd));
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     if opts.one_line {
@@ -633,7 +628,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> c_i
                 read_one_char_at_a_time(streams.stdin_fd, &mut buff, opts.nchars, opts.split_null);
         }
 
-        if exit_res != STATUS_CMD_OK {
+        if exit_res.is_err() {
             clear_remaining_vars(&mut var_ptr);
             return exit_res;
         }
