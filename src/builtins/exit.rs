@@ -3,7 +3,7 @@ use super::r#return::parse_return_value;
 
 /// Function for handling the exit builtin.
 pub fn exit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
-    let retval = parse_return_value(args, parser, streams)?;
+    parse_return_value(args, parser, streams)?;
 
     // Mark that we are exiting in the parser.
     // TODO: in concurrent mode this won't successfully exit a pipeline, as there are other parsers

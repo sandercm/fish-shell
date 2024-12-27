@@ -4113,7 +4113,7 @@ pub fn reader_write_title(
     }
 
     let mut lst = vec![];
-    exec_subshell(
+    let _ = exec_subshell(
         &fish_title_command,
         parser,
         Some(&mut lst),
@@ -4143,7 +4143,7 @@ impl<'a> Reader<'a> {
         self.mode_prompt_buff.clear();
         if function::exists(MODE_PROMPT_FUNCTION_NAME, self.parser) {
             let mut mode_indicator_list = vec![];
-            exec_subshell(
+            let _ = exec_subshell(
                 MODE_PROMPT_FUNCTION_NAME,
                 self.parser,
                 Some(&mut mode_indicator_list),
@@ -4199,7 +4199,7 @@ impl<'a> Reader<'a> {
                 // producing an error.
                 let left_prompt_deleted = zelf.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
                     && !function::exists(&zelf.conf.left_prompt_cmd, zelf.parser);
-                exec_subshell(
+                let _ = exec_subshell(
                     if left_prompt_deleted {
                         DEFAULT_PROMPT
                     } else {
@@ -4216,7 +4216,7 @@ impl<'a> Reader<'a> {
                 if function::exists(&zelf.conf.right_prompt_cmd, zelf.parser) {
                     // Status is ignored.
                     let mut prompt_list = vec![];
-                    exec_subshell(
+                    let _ = exec_subshell(
                         &zelf.conf.right_prompt_cmd,
                         zelf.parser,
                         Some(&mut prompt_list),
@@ -4851,7 +4851,7 @@ fn expand_replacer(
         Some(&mut outputs),
         /*apply_exit_status=*/ false,
     );
-    if ret != STATUS_CMD_OK {
+    if ret.is_err(){
         return None;
     }
     let result = join_strings(&outputs, '\n');
@@ -5292,9 +5292,7 @@ impl<'a> Reader<'a> {
             false,
         );
 
-        let ret = exec_subshell(&cmd, parser, None, /*apply_exit_status=*/ false);
-
-        ret == STATUS_CMD_OK
+        exec_subshell(&cmd, parser, None, /*apply_exit_status=*/ false).is_ok()
     }
 
     // Add the current command line contents to history.

@@ -100,7 +100,7 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Resul
     // Non-existent jobs aren't an error, but information about them is useful.
     for pid in pids {
         if let Some((job_pos, _job)) = parser.job_get_with_index_from_pid(pid) {
-            send_to_bg(parser, streams, cmd, job_pos);
+            send_to_bg(parser, streams, cmd, job_pos)?;
         } else {
             streams
                 .err

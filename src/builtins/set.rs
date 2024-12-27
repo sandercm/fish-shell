@@ -213,19 +213,19 @@ impl Options {
         optind: usize,
         parser: &Parser,
         streams: &mut IoStreams,
-    ) -> Result<(), c_int> {
+    ) -> Result<(), StatusError> {
         // Can't query and erase or list.
         if opts.query && (opts.erase || opts.list) {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS)
         }
 
         // We can't both list and erase variables.
         if opts.erase && opts.list {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS)
         }
 
         // Variables can only have one scope...
@@ -239,14 +239,14 @@ impl Options {
         {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS)
         }
 
         // Variables can only have one export status.
         if opts.exportv && opts.unexport {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS)
         }
 
         // Variables can only have one path status.
@@ -255,14 +255,14 @@ impl Options {
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_PATHUNPATH, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS)
         }
 
         // Trying to erase and (un)export at the same time doesn't make sense.
         if opts.erase && (opts.exportv || opts.unexport) {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS)
         }
 
         // The --show flag cannot be combined with any other flag.
@@ -277,7 +277,7 @@ impl Options {
         {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS)
         }
 
         if args.len() == optind && opts.erase {
@@ -285,7 +285,7 @@ impl Options {
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, L!("--erase")));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS)
         }
 
         Ok(())

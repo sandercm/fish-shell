@@ -1020,7 +1020,7 @@ fn builtin_breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wst
 
     let bpb = parser.push_block(Block::breakpoint_block());
     let io_chain = &streams.io_chain;
-    reader_read(parser, STDIN_FILENO, io_chain);
+    reader_read(parser, STDIN_FILENO, io_chain)?;
     parser.pop_block(bpb);
     match parser.get_last_status() {
         0 => Ok(StatusOk::OK),

@@ -275,7 +275,7 @@ pub fn exec_subshell_for_expand(
     parser: &Parser,
     job_group: Option<&JobGroupRef>,
     outputs: &mut Vec<WString>,
-) -> libc::c_int {
+) -> Result<StatusOk, StatusError> {
     parser.assert_can_execute();
     let mut break_expand = true;
     let ret = exec_subshell_internal(
@@ -291,7 +291,7 @@ pub fn exec_subshell_for_expand(
     if break_expand {
         ret
     } else {
-        STATUS_CMD_OK
+        Ok(StatusOk::OK)
     }
 }
 
