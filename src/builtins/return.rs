@@ -44,11 +44,8 @@ fn parse_options(
 }
 
 /// Function for handling the return builtin.
-pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
-    let mut retval = match parse_return_value(args, parser, streams) {
-        Ok(v) => v,
-        Err(e) => return e,
-    };
+pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+    let mut retval = parse_return_value(args, parser, streams);
 
     let has_function_block = parser.blocks().iter().any(|b| b.is_function_call());
 
@@ -58,9 +55,11 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
     // evaluating to a `$status` of 0 and keeps us from running into undefined behavior by trying to
     // left shift a negative value in W_EXITCODE().
     // Note in Rust, dividend % divisor has the same sign as the dividend.
-    if retval < 0 {
-        retval = 256 - (retval % 256).abs();
-    }
+    if let Err(ref err) = retval {
+        if err.get_code() < 0 {
+            retval = Err(StatusError::from(256 - (err.get_code() % 256).abs()));
+        }
+    };
 
     // If we're not in a function, exit the current script (but not an interactive shell).
     if !has_function_block {
