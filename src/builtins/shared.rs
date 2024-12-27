@@ -16,7 +16,7 @@ use std::io::{BufRead, BufReader, Read};
 use std::os::fd::FromRawFd;
 use std::sync::Arc;
 
-pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> c_int;
+pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> Result<StatusOk, StatusError>;
 
 /// The default prompt for the read command.
 pub const DEFAULT_READ_PROMPT: &wstr =
@@ -77,8 +77,76 @@ pub const FG_MSG: &str = "Send job %d (%ls) to foreground\n";
 
 // Return values (`$status` values for fish scripts) for various situations.
 
+pub trait get_status_code {
+    fn get_code(&self) -> c_int;
+}
+/// Functions that return a status code should have return type
+/// `Result<StatusOk, StatusError>`.
+pub enum StatusOk {
+    OK,
+    OK_PRESERVE_FAILURE,
+}
+
+impl get_status_code for StatusOk {
+    fn get_code(&self) -> c_int {
+        0
+    }
+}
+
+pub enum StatusError {
+    STATUS_CMD_ERROR,
+    STATUS_INVALID_ARGS,
+    STATUS_EXPAND_ERROR,
+    STATUS_READ_TOO_MUCH,
+    STATUS_ILLEGAL_CMD,
+    STATUS_UNMATCHED_WILDCARD,
+    STATUS_NOT_EXECUTABLE,
+    STATUS_CMD_UNKNOWN,
+    STATUS_SIG_INT,
+    STATUS_NO_VARIABLES_GIVEN,
+    // used when the return code is not reserved
+    STATUS_UNKNOWN_CODE(c_int),
+}
+
+impl StatusError {
+    pub fn from(int: c_int) -> StatusError {
+        match int {
+            STATUS_CMD_ERROR => StatusError::STATUS_CMD_ERROR,
+            STATUS_INVALID_ARGS => StatusError::STATUS_INVALID_ARGS,
+            STATUS_EXPAND_ERROR => StatusError::STATUS_EXPAND_ERROR,
+            STATUS_READ_TOO_MUCH => StatusError::STATUS_READ_TOO_MUCH,
+            STATUS_ILLEGAL_CMD => StatusError::STATUS_ILLEGAL_CMD,
+            STATUS_UNMATCHED_WILDCARD => StatusError::STATUS_UNMATCHED_WILDCARD,
+            STATUS_NOT_EXECUTABLE => StatusError::STATUS_NOT_EXECUTABLE,
+            STATUS_CMD_UNKNOWN => StatusError::STATUS_CMD_UNKNOWN,
+            STATUS_SIG_INT => StatusError::STATUS_SIG_INT,
+            STATUS_NO_VARIABLES_GIVEN => StatusError::STATUS_NO_VARIABLES_GIVEN,
+            _ => StatusError::STATUS_UNKNOWN_CODE(int),
+        }
+    }
+}
+
+impl get_status_code for StatusError {
+    fn get_code(&self) -> c_int {
+        match self {
+            StatusError::STATUS_CMD_ERROR => 1,
+            StatusError::STATUS_INVALID_ARGS => 2,
+            StatusError::STATUS_CMD_UNKNOWN => 127,
+            StatusError::STATUS_EXPAND_ERROR => 121,
+            StatusError::STATUS_READ_TOO_MUCH => 122,
+            StatusError::STATUS_ILLEGAL_CMD => 123,
+            StatusError::STATUS_UNMATCHED_WILDCARD => 124,
+            StatusError::STATUS_NOT_EXECUTABLE => 126,
+            StatusError::STATUS_SIG_INT => 130,
+            StatusError::STATUS_NO_VARIABLES_GIVEN => 255,
+            StatusError::STATUS_UNKNOWN_CODE(code) => *code,
+        }
+    }
+}
+
 /// The status code used for normal exit in a command.
 pub const STATUS_CMD_OK: c_int = 0;
+
 /// The status code used for failure exit in a command (but not if the args were invalid).
 pub const STATUS_CMD_ERROR: c_int = 1;
 /// The status code used for invalid arguments given to a command. This is distinct from valid
@@ -660,7 +728,7 @@ impl HelpOnlyCmdOpts {
         args: &mut [&wstr],
         parser: &Parser,
         streams: &mut IoStreams,
-    ) -> Result<Self, c_int> {
+    ) -> Result<Self, StatusError> {
         let cmd = args[0];
         let print_hints = true;
 
@@ -682,7 +750,7 @@ impl HelpOnlyCmdOpts {
                         args[w.wopt_index - 1],
                         print_hints,
                     );
-                    return Err(STATUS_INVALID_ARGS);
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
                 '?' => {
                     builtin_unknown_option(
@@ -692,7 +760,7 @@ impl HelpOnlyCmdOpts {
                         args[w.wopt_index - 1],
                         print_hints,
                     );
-                    return Err(STATUS_INVALID_ARGS);
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
                 _ => {
                     panic!("unexpected retval from WGetopter");
