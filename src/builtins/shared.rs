@@ -525,8 +525,8 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
     }
 
     // Handle the case of an STATUS_PRESERVE_FAILURE.
-    if let (0, Ok(StatusOk::OK_PRESERVE_FAILURE)) = (code, builtin_ret) { 
-        return ProcStatus::empty() 
+    if let (0, Ok(StatusOk::OK_PRESERVE_FAILURE)) = (code, builtin_ret) {
+        return ProcStatus::empty();
     }
 
     if code < 0 {

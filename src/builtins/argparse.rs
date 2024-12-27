@@ -817,7 +817,8 @@ fn argparse_parse_flags<'args>(
             _ => handle_flag(parser, opts, opt, is_long_flag, w.woptarg, streams),
         };
         // clippy wants to use `?` here by using .as_ref() which doesn't exist for this Result type.
-        #[allow(clippy::question_mark)] if retval.is_err() {
+        #[allow(clippy::question_mark)]
+        if retval.is_err() {
             return retval;
         }
     }
