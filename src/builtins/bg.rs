@@ -5,7 +5,7 @@ use crate::proc::Pid;
 use super::prelude::*;
 
 /// Helper function for builtin_bg().
-fn send_to_bg(parser: &Parser, streams: &mut IoStreams, cmd: &wstr, job_pos: usize) -> c_int {
+fn send_to_bg(parser: &Parser, streams: &mut IoStreams, cmd: &wstr, job_pos: usize) -> Result<StatusOk, StatusError> {
     {
         let jobs = parser.jobs();
         if !jobs[job_pos].wants_job_control() {
@@ -19,7 +19,7 @@ fn send_to_bg(parser: &Parser, streams: &mut IoStreams, cmd: &wstr, job_pos: usi
             )
             };
             builtin_print_help_error(parser, streams, cmd, &err);
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
 
         let job = &jobs[job_pos];
@@ -32,30 +32,26 @@ fn send_to_bg(parser: &Parser, streams: &mut IoStreams, cmd: &wstr, job_pos: usi
         job.group().set_is_foreground(false);
 
         if !job.resume() {
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
     }
     parser.job_promote_at(job_pos);
 
-    return STATUS_CMD_OK;
+    return Ok(StatusOk::OK);
 }
 
 /// Builtin for putting a job in the background.
-pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int {
-    let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
-        Ok(opts) => opts,
-        Err(err) if err != STATUS_CMD_OK => return err,
-        Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
-    };
+pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Result<StatusOk, StatusError> {
+    let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;
 
     let cmd = match args.get(0) {
-        Some(cmd) => cmd,
-        None => return STATUS_INVALID_ARGS,
+        Some(cmd) => *cmd,
+        None => return Err(StatusError::STATUS_INVALID_ARGS),
     };
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     if opts.optind == args.len() {
@@ -70,7 +66,7 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int
             streams
                 .err
                 .append(wgettext_fmt!("%ls: There are no suitable jobs\n", cmd));
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         };
 
         return send_to_bg(parser, streams, cmd, job_pos);
@@ -79,7 +75,7 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int
     // The user specified at least one job to be backgrounded.
     // If one argument is not a valid pid (i.e. integer >= 0), fail without backgrounding anything,
     // but still print errors for all of them.
-    let mut retval: i32 = STATUS_CMD_OK;
+    let mut retval: Result<StatusOk, StatusError> = Ok(StatusOk::OK);
     let pids: Vec<Pid> = args[opts.optind..]
         .iter()
         .filter_map(|arg| match fish_wcstoi(arg).map(Pid::new) {
@@ -90,13 +86,13 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int
                     cmd,
                     arg
                 ));
-                retval = STATUS_INVALID_ARGS;
+                retval = Err(StatusError::STATUS_INVALID_ARGS);
                 None
             }
         })
         .collect();
 
-    if retval != STATUS_CMD_OK {
+    if retval.is_err() {
         return retval;
     }
 
@@ -112,5 +108,5 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> c_int
         }
     }
 
-    return STATUS_CMD_OK;
+    return Ok(StatusOk::OK);
 }
