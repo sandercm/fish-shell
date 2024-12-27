@@ -530,7 +530,7 @@ fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<isize>) -> Vec<WS
 
 /// Print the names of all environment variables in the scope. It will include the values unless the
 /// `set --names` flag was used.
-fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> c_int {
+fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> Result<StatusOk, StatusError> {
     let names_only = opts.list;
     let mut names = parser.vars().get_names(opts.scope());
     names.sort();
@@ -573,7 +573,7 @@ fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> c_int {
         streams.out.append(out);
     }
 
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }
 
 fn query(
@@ -685,7 +685,7 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
 }
 
 /// Show mode. Show information about the named variable(s).
-fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) -> c_int {
+fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) -> Result<StatusOk, StatusError> {
     let vars = parser.vars();
     if args.is_empty() {
         // show all vars
@@ -719,7 +719,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
                     .err
                     .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, arg));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
 
             if arg.contains('[') {
@@ -728,7 +728,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
                     cmd
                 ));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_CMD_ERROR;
+                return Err(StatusError::STATUS_CMD_ERROR);
             }
 
             show_scope(arg, EnvMode::LOCAL, streams, vars);
@@ -748,7 +748,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
         }
     }
 
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }
 
 fn erase(
@@ -890,16 +890,15 @@ fn set_internal(
     cmd: &wstr,
     opts: &Options,
     parser: &Parser,
-
     streams: &mut IoStreams,
     argv: &[&wstr],
-) -> c_int {
+) -> Result<StatusOk, StatusError> {
     if argv.is_empty() {
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     let scope = opts.scope();
@@ -908,7 +907,7 @@ fn set_internal(
 
     let Some(split) = split_var_and_indexes(var_expr, scope, parser.vars(), streams) else {
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     };
 
     // Is the variable valid?
@@ -925,7 +924,7 @@ fn set_internal(
             ));
         }
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     // Setting with explicit indexes like `set foo[3] ...` has additional error handling.
@@ -937,7 +936,7 @@ fn set_internal(
                     .err
                     .append(wgettext_fmt!("%ls: array index out of bounds\n", cmd));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
         }
         // Append and prepend are disallowed.
@@ -947,7 +946,7 @@ fn set_internal(
                 cmd
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         // Argument count and index count must agree.
@@ -958,7 +957,7 @@ fn set_internal(
                 split.indexes.len(),
                 argv.len()
             ));
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
     }
 
@@ -977,7 +976,8 @@ fn set_internal(
     if retval == EnvStackSetResult::Ok {
         warn_if_uvar_shadows_global(cmd, opts, split.varname, streams, parser);
     }
-    env_result_to_status(retval)
+    
+    retval.into()
 }
 
 /// The set builtin creates, updates, and erases (removes, deletes) variables.
@@ -1004,7 +1004,7 @@ pub fn set(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Resu
         set_internal(cmd, &opts, parser, streams, args)
     };
 
-    if retval == STATUS_CMD_OK && opts.preserve_failure_exit_status {
+    if retval.is_ok() && opts.preserve_failure_exit_status {
         return Ok(StatusOk::OK_PRESERVE_FAILURE);
     }
 
