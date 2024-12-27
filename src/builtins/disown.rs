@@ -112,7 +112,8 @@ pub fn disown(
             })
             .collect();
 
-        if retval.is_err() {
+        // clippy wants to use `?` here by using .as_ref() which doesn't exist for this Result type.
+        #[allow(clippy::question_mark)] if retval.is_err() {
             return retval;
         }
 

@@ -507,9 +507,7 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
     // If the builtin itself produced an error, use that error.
     // Otherwise use any errors from writing to out and writing to err, in that order.
     let mut code = match builtin_ret {
-        Ok(ref ok) => match ok {
-            _ => ok.get_code(),
-        },
+        Ok(ref ok) => ok.get_code(),
         Err(ref err) => err.get_code(),
     };
 
@@ -527,9 +525,8 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
     }
 
     // Handle the case of an STATUS_PRESERVE_FAILURE.
-    match (code, builtin_ret) {
-        (0, Ok(StatusOk::OK_PRESERVE_FAILURE)) => return ProcStatus::empty(),
-        _ => (),
+    if let (0, Ok(StatusOk::OK_PRESERVE_FAILURE)) = (code, builtin_ret) { 
+        return ProcStatus::empty() 
     }
 
     if code < 0 {
